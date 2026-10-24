@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tamil Bible Quiz</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #3f74b9, #ede9fe);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .quiz-container {
+            background: white;
+            width: 100%;
+            max-width: 550px;
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        h1 {
+            text-align: center;
+            color: #4338ca;
+            font-size: 27px;
+            margin-top: 0;
+        }
+
+        .intro {
+            text-align: center;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        #participant-name {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        #participant-name:focus {
+            outline: 2px solid #6366f1;
+            border-color: #6366f1;
+        }
+
+        .quiz-info {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 14px;
+            color: #555;
+            margin: 20px 0 12px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background: #dbeafe;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #4f46e5;
+            transition: width 0.3s ease;
+        }
+
+        #question {
+            font-size: 21px;
+            line-height: 1.5;
+            color: #222;
+            margin-top: 25px;
+            white-space: pre-line;
+        }
+
+        #options {
+            display: grid;
+            gap: 12px;
+            margin: 22px 0;
+        }
+
+        .option {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #d1d5db;
+            border-radius: 10px;
+            background: white;
+            color: #222;
+            font-size: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .option:hover:not(:disabled) {
+            border-color: #6366f1;
+            background: #eef2ff;
+        }
+
+        .option.correct {
+            background: #dcfce7;
+            border-color: #16a34a;
+        }
+
+        .option.wrong {
+            background: #fee2e2;
+            border-color: #dc2626;
+        }
+
+        .option:disabled {
+            cursor: default;
+            opacity: 1;
+        }
+
+        #feedback {
+            min-height: 24px;
+            line-height: 1.5;
+            font-weight: bold;
+            margin: 12px 0;
+        }
+
+        .main-button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #4f46e5;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .main-button:hover:not(:disabled) { background: #3730a3; }
+
+        .main-button:disabled {
+            background: #a5b4fc;
+            cursor: not-allowed;
+        }
+
+        #result { text-align: center; }
+
+        #final-score {
+            font-size: 23px;
+            font-weight: bold;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .hidden { display: none !important; }
+
+        .result-mode {
+            padding: 22px;
+            margin: 20px 0;
+            border-radius: 18px;
+            text-align: center;
+            animation: popIn 0.6s ease;
+        }
+
+        .result-mode[hidden] { display: none; }
+
+        .happy-mode {
+            background: linear-gradient(135deg, #d4fc79, #96e6a1);
+            color: #14532d;
+        }
+
+        .sad-mode {
+            background: linear-gradient(135deg, #dbeafe, #e9d5ff);
+            color: #3730a3;
+        }
+
+        .result-emoji {
+            font-size: 65px;
+            margin: 10px;
+        }
+
+        .result-mode h2 {
+            font-size: 26px;
+            margin: 10px 0;
+            color: inherit;
+        }
+
+        .result-mode p {
+            font-size: 17px;
+            line-height: 1.6;
+        }
+
+        #submission-status {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 12px; }
+            .quiz-container { padding: 20px; }
+            h1 { font-size: 23px; }
+            #question { font-size: 18px; }
+            .option { font-size: 15px; padding: 12px; }
+        }
+    </style>
+</head>
+
+<body>
+<main class="quiz-container">
+
+    <!-- REGISTRATION PAGE -->
+    <section id="register">
+        <h1>ஆதியாகமம் வினாடி வினா</h1>
+        <p class="intro">
+            Welcome to the Tamil Bible Quiz!<br>
+            Please enter your name before starting.
+        </p>
+
+        <form id="register-form">
+            <label for="participant-name">Participant Name / பங்கேற்பாளர் பெயர்</label>
+            <input
+                type="text"
+                id="participant-name"
+                placeholder="Enter your full name"
+                required
+                maxlength="100"
+                autocomplete="name"
+            >
+            <button type="submit" class="main-button">Start Quiz / வினாடி வினாவைத் தொடங்கு</button>
+        </form>
+    </section>
+
+    <!-- QUIZ AREA -->
+    <section id="quiz" class="hidden">
+        <h1>Bible Champions (Genesis) </h1>
+
+        <div class="quiz-info">
+            <span id="question-count">Question 1 of 20</span>
+            <span id="score">Score: 0</span>
+        </div>
+
+        <div class="progress-track">
+            <div id="progress-bar"></div>
+        </div>
+
+        <h2 id="question">Loading question...</h2>
+        <div id="options"></div>
+        <p id="feedback" aria-live="polite"></p>
+
+        <button id="next-btn" class="main-button" disabled>Next Question</button>
+    </section>
+
+    <!-- FINAL RESULT AREA -->
+    <section id="result" class="hidden" aria-live="polite">
+        <h2> வினாடி வினா முடிந்தது!</h2>
+        <p id="final-score"></p>
+        <p id="message"></p>
+
+        <div id="resultMode" class="result-mode" hidden>
+            <div id="resultEmoji" class="result-emoji"></div>
+            <h2 id="resultTitle"></h2>
+            <p id="resultMessage"></p>
+        </div>
+
+        <p id="submission-status"></p>
+
+        <button id="restart-btn" class="main-button">மீண்டும் விளையாடு</button>
+    </section>
+
+</main>
+
+<script>
+    /*
+      GOOGLE SHEETS SETUP:
+      After deploying your Google Apps Script as a Web app,
+      paste the URL ending in /exec between the quotation marks below.
+    */
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1gdokO8NP6teWiheZJz4m4yhhswSHR8AK58RhRt2nq3HB3s5wwMfUsgvgx_tw7MvLzA/exec";
+    async function saveQuizResult(name, score, total) {
+    const percentage = Math.round((score / total) * 100);
+
+    const formData = new URLSearchParams({
+        name: name,
+        score: String(score),
+        total: String(total),
+        percentage: String(percentage)
+    });
+
+    try {
+        await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: formData
+        });
+
+        document.getElementById("submission-status").textContent =
+            "Your result has been submitted. Thank you!";
+
+    } catch (error) {
+        document.getElementById("submission-status").textContent =
+            "Submission failed. Please check your internet connection.";
+        console.error(error);
+    }
+}
+    // QUESTIONS AND ANSWERS
+    const questions = [
+        {
+            question: "1) Which was more cunning than any beast of the field which the Lord God had made?",
+            options: ["Bear ", "Serpent", "Lion", "Pig"],
+            answer: 1
+        },
+        {
+            question: "2) God said, ‘You shall not eat it, nor shall you touch it, lest you____?",
+            options: ["Your eyes be opened", "Become Angels", "Live", "Die"],
+            answer: 3
+        },
+        {
+            question: "3) They sewed ______ together and made themselves coverings.",
+            options: ["Olive leaves", "Fig leaves", "Teak Leaves", "Banana Leaves"],
+            answer: 1
+        },
+        {
+            question: "4) When did they hear the sound of the Lord God walking in the garden?",
+            options: ["Cool of the day", "Hot day", "Hot Noon", "Cool of the night "],
+            answer: 0
+        },
+        {
+            question: "5) Where did Adam and his wife hide themselves from the presence of the Lord God?",
+            options: ["Among the trees of the garden", "Among the plants of the garden", "Among the woods", "In the garden"],
+            answer: 0
+        },
+        {
+            question: "6) To whom did the Lord ask, Where are you?",
+            options: ["Serpent", "Adam", "Tree", "None of the above"],
+            answer: 1
+        },
+        {
+            question: "7) On your belly you shall go, And you shall eat ____ All the days of your life.",
+            options: ["Sand", "Stone", "Leaf", "Dust"],
+            answer: 3
+        },
+        {
+            question: "8) What is cursed for Adam’s sake?",
+            options: ["Garden", "World", "Ground","Seas"],
+            answer: 2
+        },
+        {
+            question: "9) To whom was it said, For dust you are, And to dust you shall return.",
+            options: ["Adam", "Serpent", "Eve", "None"],
+            answer: 0
+        },
+        {
+            question: "10) The Lord God made tunics of ____, and clothed Adam and his wife.",
+            options: ["Leaf", "Skin", "Silk", "Cotton"],
+            answer: 1
+        },
+        {
+            question: "11)  She conceived and bore ___, and said, I have acquired a man from the Lord.",
+            options: ["Abel", "Adam", "Cain", "Seth"],
+            answer: 2
+        },
+        {
+            question: "12) Who was the keeper of sheep, Who was the tiller of the ground?",
+            options: ["Cain,Abel", "Abel,Cain", "Seth,Abel", "Adam,Seth"],
+            answer: 1
+        },
+        {
+            question: "13) What did Cain offer the Lord?",
+            options: ["Herb of the field" , "Vegetables of the ground"," Seed of the ground","Fruit of the ground"],
+            answer: 3
+        },
+        {
+            question: "14) Who brought of the firstborn of his flock and of their fat?",
+            options: ["Adam", "Cain", "Seth", "Abel"],
+            answer: 3
+        },
+        {
+            question: "15) What cries out to Me from the ground, said the Lord?",
+            options: ["voice of your brother's blood", "noise", "speaking sound", "rebellious sound"],
+            answer: 0
+        },
+        {
+            question: "16) Whom and whose offering did the Lord respect? Whom and whose offering did the Lord not respect?",
+            options: ["Abel, Seth", "Cain, Abel", "Abel, Cain", "Adam,Seth"],
+            answer: 2
+        },
+        {
+            question: "17) Whose countenance fell? ",
+            options: ["Adam", "Abel", "Cain", "Seth"],
+            answer: 2
+        },
+        {
+            question: "18) Where were they when Cain rose up against Abel his brother and killed him?",
+            options: ["In the garden", "In the city", "In the field", "In the town"],
+            answer: 2
+        },
+        {
+            question: "19) Who said, I do not know. Am I my brother’s keeper?",
+            options: ["Seth", "Cain", "Abel", "Adam"],
+            answer: 1
+        },
+        {
+            question: "20) For how many years did Lamech live?",
+            options: ["555 ", "666 ", "777", "888"],     
+            answer: 2
+        },
+        {
+            question: "21) What has opened its mouth to receive your brother’s blood from your hand?",
+            options: ["Country", "Garden", "Animal", "Earth"],     
+            answer: 3
+        },
+        {
+            question: "22) What shall no longer yield its strength to you, said the Lord?",
+            options: ["Nation", "Garden", "Ground", "Earth"],     
+            answer: 2
+        },
+        {
+            question: "23) How you shall be on the earth, said the Lord to Cain?",
+            options: ["A fugitive and a vagabond", "Nomad", "Blessed", "Cursed"],     
+            answer: 0
+        },
+        {
+            question: "24) What will anyone who finds Cain do?",
+            options: ["Be his friend", "Accept him", "Kill him", "Destroy him"],     
+            answer: 2
+        },
+        {
+            question: "25) Whoever kills Cain, vengeance shall be taken on him _____ said the Lord and set a mark on Cain, lest anyone finding him should kill him?",
+            options: ["seventy fold", "sevenfold", "seventy seven fold", "seven hundred fold"],     
+            answer: 1
+        },
+        {
+            question: "26) Cain went out from the presence of the Lord and dwelt in the land of _____ on the east of Eden.",
+            options: ["Egypt", "Bethel", "Enoch", "Nod"],     
+            answer: 3
+        },
+        {
+            question: "27) What was the name of the city that Cain built?",
+            options: ["Babel", "Bethel", "Enoch", "Ai"],     
+            answer: 2
+        },
+        {
+            question: "28) Who was the sister of Tubal-Cain?",
+            options: ["Eve", "Adah", "Zillah", "Naamah"],     
+            answer: 3
+        },
+        {
+            question: "29) For I have killed a ____ for wounding me, Even a ____ for hurting me. ",
+            options: ["man, young man ", "young man, man", "friend, brother", "brother, friend"],     
+            answer: 0
+        },
+        {
+            question: "30) If Cain shall be avenged sevenfold, Then Lamech ______",
+            options: ["seventy fold", "seven fold", "seventy-sevenfold", "seven hundred fold"],     
+            answer: 2
+        },
+        {
+            question: "31) She named him ____, For God has appointed another seed for me instead of Abel, whom Cain killed.",
+            options: ["Seth", "Enoch", "Jabal", "Jubal"],     
+            answer: 0
+        },
+        {
+            question: "32) Men began to call on the name of the Lord, when _____  was born.",
+            options: ["Enosh", "Enoch", "Jabal", "Seth"],     
+            answer: 0
+        },
+        {
+            question: "33) Adam lived one hundred and thirty years, and begot a son in his own likeness, after his image, and named him ______.",
+            options: ["Abel", "Cain", "Seth", "Adam"],     
+            answer: 2
+        },
+        {
+            question: "34) All the days that Adam lived were ____",
+            options: ["930", "912", "950", "962"],     
+            answer: 0
+        },
+        {
+            question: "35) Whom did Seth begot?",
+            options: ["Methuselah", "Enosh", "Jabal", "Jubal"],     
+            answer: 1
+        },
+        {
+            question: "36) For how many years did Enoch walk with God? ",
+            options: ["100", "65", "365", "300"],     
+            answer: 3
+        },
+        {
+            question: "37) Who was not?Whom did God take?",
+            options: ["Methuselah", "Enosh", "Seth", "Enoch"],     
+            answer: 3
+        },
+        {
+            question: "38) For how many years did Methuselah live?",
+            options: ["950", "930", "969", "962"],     
+            answer: 2
+        },
+        {
+            question: "39) Who was the Father of Noah?",
+            options: ["Enosh", "Methuselah", "Lamech", "Irad"],     
+            answer: 2
+        },
+        {
+            question: "40) Who were the sons of Noah?",
+            options: ["Shem", "Ham", "Japheth", "All of the above"],     
+            answer: 3
+        },
+        {
+            question: "41) Who was the son of Enoch?",
+            options: ["Enosh", "Methuselah", "Lamech", "Irad"],     
+            answer: 1
+        },
+        {
+            question: "42) Who saw that the daughters of men were beautiful and took wives for themselves?",
+            options: ["The sons of God", "Angels", "Man", "Gods"],     
+            answer: 0
+        },
+        {
+            question: "43) And the Lord said, My ______ shall not strive with man forever?", 
+            options: ["Flesh", "Spirit", "Soul", "Body?"],     
+            answer: 1
+        },
+        {
+            question: "44) For man is indeed _______",
+            options: ["Dust", "Life", "Flesh", "Clay"],     
+            answer: 2
+        },
+        {
+            question: "45) Man’s days shall be ______.",
+            options: ["80", "120", "100", "60"],     
+            answer: 1
+        },
+        {
+            question: "46) The Lord saw that what was great in the Earth?",
+            options: ["Men", "Animals", "The sins of man", "The wickedness of man"],     
+            answer: 3
+        },
+        {
+            question: "47) The Lord saw that every intent of the thoughts of his ____ was only evil continually.",
+            options: ["Mind", "Understanding", "Heart", "Ideas"],     
+            answer: 2
+        },
+        {
+            question: "48) The Lord was sorry that He had made _____ on the earth, and He was grieved in His heart.",
+            options: ["Man", "Adam", "Eve", "Serpent"],     
+            answer: 0
+        },
+        {
+            question: "49) Who found grace in the eyes of the Lord?",
+            options: ["Adam", "Seth", "Noah", "Shem"],     
+            answer: 2
+        },
+        {
+            question: "50) How was Noah in his generations?",
+            options: ["Perfect", "Just", "Walked with God", "All of the above"],     
+            answer: 3
+        },
+        {
+            question: "51) What was corrupt before God?",
+            options: ["Earth", "World", "Man", "Creatures?"],     
+            answer: 0
+        },
+        {
+            question: "52) What was the earth filled with?",
+            options: ["Sin", "Curse", "Violence", "Wickedness"],     
+            answer: 2
+        },
+        {
+            question: "53) Who had corrupted their way on the earth?",
+            options: ["Men", "Animals", "Creatures", "All flesh"],     
+            answer: 3
+        },
+        {
+            question: "54) Make yourself an ark of ____. Make ____ in the ark, and cover it inside and outside with pitch.",
+            options: ["Acacia wood, window ", "Gopherwood, rooms ", "Fig tree, door", "Sycamore tree, decks"],     
+            answer: 1
+        },
+        {
+            question: "55) How many cubits long was the ark?",
+            options: ["300", "50", "30", "None of the above"],     
+            answer: 0
+        },
+        {
+            question: "56) But I will establish My _______ with you?",
+            options: ["Commandment", "Agreement", "Covenant", "None of the above"],     
+            answer: 2
+        },
+        {
+            question: "57) In whose eyes did Noah find grace?",
+            options: ["Lord", "God", "Father", "Teacher"],     
+            answer: 0
+        },
+        {
+            question: "58) What was the height of the ark?",
+            options: ["300", "50", "30", "None of the above"],      
+            answer: 2
+        },
+        {
+            question: "59) What was the width of the ark?",
+            options: ["300", "50", "30", "None of the above"],    
+            answer: 1
+        },
+        {
+            question: "60) And you shall take for yourself of all ______ that is eaten; and it shall be for you and for them?",
+            options: ["bread", "snacks", "meat", "food"],     
+            answer: 3
+        },
+    ];
+
+    // VARIABLES
+    let currentQuestion = 0;
+    let score = 0;
+    let answered = false;
+    let participantName = "";
+    let resultSubmitted = false;
+
+    // HTML ELEMENTS
+    const registerSection = document.getElementById("register");
+    const registerForm = document.getElementById("register-form");
+    const nameInput = document.getElementById("participant-name");
+    const quizSection = document.getElementById("quiz");
+    const resultSection = document.getElementById("result");
+    const questionElement = document.getElementById("question");
+    const optionsElement = document.getElementById("options");
+    const countElement = document.getElementById("question-count");
+    const scoreElement = document.getElementById("score");
+    const feedbackElement = document.getElementById("feedback");
+    const progressBar = document.getElementById("progress-bar");
+    const nextButton = document.getElementById("next-btn");
+    const restartButton = document.getElementById("restart-btn");
+    const submissionStatus = document.getElementById("submission-status");
+
+    // REGISTRATION
+    registerForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        participantName = nameInput.value.trim();
+
+        if (!participantName) {
+            alert("Please enter your name.");
+            nameInput.focus();
+            return;
+        }
+
+        currentQuestion = 0;
+        score = 0;
+        answered = false;
+        resultSubmitted = false;
+        scoreElement.textContent = "Score: 0";
+
+        registerSection.classList.add("hidden");
+        resultSection.classList.add("hidden");
+        quizSection.classList.remove("hidden");
+
+        showQuestion();
+    });
+
+    // DISPLAY A QUESTION
+    function showQuestion() {
+        answered = false;
+        const current = questions[currentQuestion];
+
+        countElement.textContent =
+            `Question ${currentQuestion + 1} of ${questions.length}`;
+        questionElement.textContent = current.question;
+        optionsElement.innerHTML = "";
+        feedbackElement.textContent = "";
+        nextButton.disabled = true;
+
+        nextButton.textContent =
+            currentQuestion === questions.length - 1
+                ? "See Final Score"
+                : "Next Question";
+
+        progressBar.style.width =
+            `${(currentQuestion / questions.length) * 100}%`;
+
+        current.options.forEach(function(option, index) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "option";
+            button.textContent = String.fromCharCode(65 + index) + ". " + option;
+
+            button.addEventListener("click", function() {
+                selectAnswer(index, button);
+            });
+
+            optionsElement.appendChild(button);
+        });
+    }
+
+    // CHECK ANSWER
+    function selectAnswer(selectedIndex, selectedButton) {
+        if (answered) return;
+        answered = true;
+
+        const correctIndex = questions[currentQuestion].answer;
+        const allOptions = optionsElement.querySelectorAll(".option");
+
+        allOptions.forEach(function(button, index) {
+            button.disabled = true;
+            if (index === correctIndex) button.classList.add("correct");
+        });
+
+        if (selectedIndex === correctIndex) {
+            score++;
+            feedbackElement.textContent = "Correct! Well done!";
+            feedbackElement.style.color = "#15803d";
+        } else {
+            selectedButton.classList.add("wrong");
+            feedbackElement.textContent =
+                "Incorrect! Correct answer: " +
+                questions[currentQuestion].options[correctIndex];
+            feedbackElement.style.color = "#dc2626";
+        }
+
+        scoreElement.textContent = "Score: " + score;
+        nextButton.disabled = false;
+    }
+
+    // NEXT QUESTION
+    nextButton.addEventListener("click", function() {
+        if (!answered) return;
+
+        currentQuestion++;
+
+        if (currentQuestion < questions.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    });
+
+    // HAPPY MODE OR SAD MODE
+    function showResultMode(finalScore, totalQuestions) {
+        const percentage = (finalScore / totalQuestions) * 100;
+        const resultMode = document.getElementById("resultMode");
+        const resultEmoji = document.getElementById("resultEmoji");
+        const resultTitle = document.getElementById("resultTitle");
+        const resultMessage = document.getElementById("resultMessage");
+
+        resultMode.hidden = false;
+        resultMode.classList.remove("happy-mode", "sad-mode");
+
+        if (percentage >= 70) {
+            resultMode.classList.add("happy-mode");
+            resultEmoji.textContent = "🥳🎉";
+            resultTitle.textContent = "Excellent!";
+            resultMessage.textContent =
+                "The horse is prepared for the day of battle, But deliverance is of the Lord. (Proverbs 21:31)";
+        } else {
+            resultMode.classList.add("sad-mode");
+            resultEmoji.textContent = "😢";
+            resultTitle.textContent = "Don't Give Up!";
+            resultMessage.textContent =
+                "Keep reading the Bible and practising. You can do even better next time!";
+        }
+    }
+    // SHOW FINAL SCORE
+    function showResult() {
+        quizSection.classList.add("hidden");
+        resultSection.classList.remove("hidden");
+        progressBar.style.width = "100%";
+
+        document.getElementById("final-score").textContent =
+            participantName + " — Your Score: " + score + " / " + questions.length;
+
+        const percentage = (score / questions.length) * 100;
+        let message;
+
+        if (percentage === 100) {
+            message = "Excellent! You answered every question correctly!";
+        } else if (percentage >= 70) {
+            message = "Great job! Keep learning!";
+        } else if (percentage >= 40) {
+            message = "Good effort! Practise and try again.";
+        } else {
+            message = "Keep practising. You can improve!";
+        }
+
+        document.getElementById("message").textContent =
+            message + " Percentage: " + percentage.toFixed(1) + "%";
+
+        showResultMode(score, questions.length);
+
+        if (!resultSubmitted) {
+            resultSubmitted = true;
+
+            saveQuizResult(
+                participantName,
+                score,
+                questions.length
+            );
+        }
+    }
+
+    // RESTART: ASK FOR THE NAME AGAIN
+    restartButton.addEventListener("click", function() {
+        currentQuestion = 0;
+        score = 0;
+        answered = false;
+        resultSubmitted = false;
+        participantName = "";
+
+        scoreElement.textContent = "Score: 0";
+        resultSection.classList.add("hidden");
+        quizSection.classList.add("hidden");
+        registerSection.classList.remove("hidden");
+
+        document.getElementById("resultMode").hidden = true;
+        nameInput.value = "";
+        submissionStatus.textContent = "";
+        nameInput.focus();
+    });
+</script>
+</body>
+</html>
